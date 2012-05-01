@@ -1,5 +1,6 @@
 package edu.rit.se.security.fuzzer.properties;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -16,13 +17,14 @@ import java.util.Scanner;
 public class FuzzerProperties extends Properties {
 	
 	//Default values
-	private static final String defaultPropertyFile = "";
+	private static final String defaultPropertyFile = "config.properties";
 	private static final String defaultUrl = "http://localhost";
 	private static final String defaultPageDiscovery = "false";
 	private static final String defaultGuessing = "false";
-	private static final String defaultGuessingFile = "";
+	private static final String defaultGuessingFile = "urlguesslist.txt";
 	private static final String defaultTimeGap ="0";
-	private static final String defaultFuzzListFile = "";
+	private static final String defaultFuzzListFile = "fuzzlist.txt";
+	private static final String defaultInputTest = "random";
 
 	//Property keys
 	private static final String url = "url";
@@ -31,6 +33,7 @@ public class FuzzerProperties extends Properties {
 	private static final String pageGuessingFile = "pageguessingfile";
 	private static final String timeGap = "timegap";
 	private static final String fuzzListFile = "fuzzlistfile";
+	private static final String inputTest = "inputtest";
 	
 	private static final long serialVersionUID = 5710264569101379889L;
 	private static FuzzerProperties properties = null;
@@ -84,9 +87,14 @@ public class FuzzerProperties extends Properties {
 		List<String> guessList = new ArrayList<String>();
 		
 		if (FuzzerProperties.guessPages()) {
-			Scanner input = new Scanner(FuzzerProperties.getPropertyManager().getProperty(pageGuessingFile, defaultGuessingFile));
-			while (input.hasNext()) {
-				guessList.add(input.nextLine());
+			Scanner input;
+			try {
+				input = new Scanner(new File(FuzzerProperties.getPropertyManager().getProperty(pageGuessingFile, defaultGuessingFile)));
+				while (input.hasNext()) {
+					guessList.add(input.nextLine());
+				}
+			} catch (FileNotFoundException e) {
+				System.err.println("FuzzerProperties: " + e.getMessage());
 			}
 		}
 		
@@ -106,6 +114,10 @@ public class FuzzerProperties extends Properties {
 	
 	public static String getURL() {
 		return FuzzerProperties.getPropertyManager().getProperty(url, defaultUrl);
+	}
+	
+	public static boolean fullInputTest() {
+		return FuzzerProperties.getPropertyManager().getProperty(inputTest, defaultInputTest).equals("full");
 	}
 
 }

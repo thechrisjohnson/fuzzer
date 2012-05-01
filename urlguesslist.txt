@@ -2,3 +2,6 @@ admin.jsp
 login.jsp
 basket.jsp
 badurl.jsp
+users.jsp
+profile.jsp
+config.jsp

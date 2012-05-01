@@ -28,6 +28,7 @@ public class Fuzzer {
 		pages = new LinkedList<WebPage>();
 		client = new TimedWebClient();
 		client.setJavaScriptEnabled(true);
+		client.setPrintContentOnFailingStatusCode(false);
 	}
 	
 	public static void main(String[] args) {
@@ -49,6 +50,9 @@ public class Fuzzer {
 		//Now test the input possibilities
 		testInput();
 		
+		//Output discoveries
+		print();
+		
 		//Close out client
 		client.closeAllWindows();
 	}
@@ -60,7 +64,7 @@ public class Fuzzer {
 				try {
 					client.getPage(base + "/" + pageUrl);
 					System.out.println("URL-DISCOVERY:GUESS - Valid url found " + base + "/" + pageUrl);
-					breakDownUrl(base.concat(pageUrl));
+					breakDownUrl(base + "/" + pageUrl);
 				} catch (FailingHttpStatusCodeException e) {
 					//Url does not work
 					System.out.println("URL-DISCOVERY:GUESS - Url not valid " + base + "/" + pageUrl);
@@ -115,6 +119,7 @@ public class Fuzzer {
 				}
 			} else {
 				page = new WebPage(url.getPath());
+				pages.add(page);
 			}
 			
 			//Parse query and add to WebPage if not already found
@@ -129,6 +134,14 @@ public class Fuzzer {
 			
 		} catch (MalformedURLException e) {
 			System.err.println("URLBreakdown - " + e.getMessage());
+		}
+	}
+	
+	private void print() {
+		System.out.println();
+		System.out.println("Valid pages discovered:");
+		for (WebPage page: pages) {
+			System.out.println(page.getURL());
 		}
 	}
 

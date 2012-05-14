@@ -1,1 +1,3 @@
 admin@thebodgeitstore.com
+user1@thebodgeitstore.com
+test@thebodgeitstore.com

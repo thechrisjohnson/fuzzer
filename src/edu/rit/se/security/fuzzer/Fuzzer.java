@@ -137,9 +137,7 @@ public class Fuzzer {
 	private void testInput() {
 		if (FuzzerProperties.fullInputTest()) {
 			for (WebPage page : pages) {
-				if (page.getForms().size() != 0) {
-					testPageFull(page);
-				}
+				testPageFull(page);
 			}
 		} else {
 			for (int i = 0; i < FuzzerProperties.getRandomInputNumber(); i++) {
@@ -265,6 +263,9 @@ public class Fuzzer {
 								HtmlPage html = submit.<HtmlPage> click();
 								containsImproperData(page, html);
 								
+								System.out.println("Guess Passwords - Attempting username: " + FuzzerProperties.getUsername()
+										+ " password: " + password);
+								
 								String content = html.getWebResponse().getContentAsString();
 								
 								if (content.contains(FuzzerProperties.getLoginSuccessContent())) {
@@ -291,6 +292,7 @@ public class Fuzzer {
 			String base = url + page.getURL() + "?" + urlInput + "=";
 			for (String input : FuzzerProperties.getInputs()) {
 				try {
+					System.out.println("Full Input Test - Accessing url: " + base + input);
 					HtmlPage html = client.getPage(base + input);
 					containsImproperData(page, html);
 				} catch (FailingHttpStatusCodeException e) {
@@ -310,6 +312,7 @@ public class Fuzzer {
 					}
 					
 					try {
+						System.out.println("Full Input Test - Submitting form for " + page.getURL());
 						HtmlPage html = submit.<HtmlPage> click();
 						containsImproperData(page, html);
 					} catch (IOException e) {
@@ -366,6 +369,7 @@ public class Fuzzer {
 			base = base.concat(input);
 			
 			try {
+				System.out.println("Accessing url: " + base);
 				HtmlPage html = client.getPage(base);
 				containsImproperData(page, html);
 			} catch (FailingHttpStatusCodeException e) {

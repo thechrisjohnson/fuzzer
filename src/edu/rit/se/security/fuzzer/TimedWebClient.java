@@ -18,10 +18,12 @@ public class TimedWebClient extends WebClient {
 	
 	private static final long serialVersionUID = -4710712450215994977L;
 	private boolean requestAllowed;
+	private Long time;
 
 	public TimedWebClient() {
 		super();
 		requestAllowed = true;
+		time = FuzzerProperties.getTimeGap();
 	}
 	
 	public HtmlPage getPage(String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
@@ -42,7 +44,7 @@ public class TimedWebClient extends WebClient {
 	
 	private void startTimer() {
 		setRequestAllowed(false);
-		Timer timer = new Timer(this);
+		Timer timer = new Timer(this, time);
 		
 		Thread thread = new Thread(timer);
 		
@@ -54,15 +56,19 @@ public class TimedWebClient extends WebClient {
 class Timer implements Runnable {
 	
 	TimedWebClient client;
+	Long time;
 	
-	public Timer(TimedWebClient client) {
+	public Timer(TimedWebClient client, Long time) {
 		this.client = client;
+		this.time = time;
 	}
 	
 	@Override
 	public void run() {
 		try {
-			Thread.sleep(FuzzerProperties.getTimeGap());
+			if (time > 0.0) {
+				Thread.sleep(time);
+			}
 		} catch (InterruptedException e) {
 			System.err.println("TimedWebClient : " + e.getMessage());
 		}

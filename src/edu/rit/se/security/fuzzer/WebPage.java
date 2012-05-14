@@ -3,6 +3,8 @@ package edu.rit.se.security.fuzzer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
+
 /**
  * Represents a web page seen by the system
  * 
@@ -10,26 +12,33 @@ import java.util.List;
  */
 public class WebPage {
 
-	private boolean searched;
+	private boolean password;
+	private HtmlForm passwordForm;
 	private String url;
-	private List<String> forms;
+	private List<HtmlForm> forms;
 	private List<String> urlInputs;
+	private List<String> successfulPasswords;
+	private List<String> sensitiveDataFound;
 	
 	public WebPage() {
 		url = new String();
-		forms = new ArrayList<String>();
+		forms = new ArrayList<HtmlForm>();
 		urlInputs = new ArrayList<String>();
-		searched = false;
+		password = false;
+		successfulPasswords = new ArrayList<String>();
+		sensitiveDataFound = new ArrayList<String>();
 	}
 	
 	public WebPage(String url) {
 		this.url = url;
-		forms = new ArrayList<String>();
+		forms = new ArrayList<HtmlForm>();
 		urlInputs = new ArrayList<String>();
-		searched = false;
+		password = false;
+		successfulPasswords = new ArrayList<String>();
+		sensitiveDataFound = new ArrayList<String>();
 	}
 	
-	public List<String> getForms() {
+	public List<HtmlForm> getForms() {
 		return forms;
 	}
 	
@@ -45,12 +54,25 @@ public class WebPage {
 		this.url = url;
 	}
 	
-	public boolean isSearched() {
-		return searched;
+	public boolean isPassword() {
+		return password;
 	}
 	
-	public void setSearched(boolean searched) {
-		this.searched = searched;
+	public HtmlForm getPasswordForm() {
+		return passwordForm;
+	}
+	
+	public void setPassword(boolean password, HtmlForm form) {
+		this.password = password;
+		passwordForm = form;
+	}
+	
+	public List<String> getSuccessfulPasswords() {
+		return successfulPasswords;
+	}
+	
+	public List<String> getSensitiveDataFound() {
+		return sensitiveDataFound;
 	}
 	
 	public boolean equals(Object o) {

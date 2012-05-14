@@ -1,0 +1,132 @@
+URL-DISCOVERY:GUESS - Valid url found http://localhost:8080/bodgeit/admin.jsp
+URL-DISCOVERY:GUESS - Valid url found http://localhost:8080/bodgeit/login.jsp
+URL-DISCOVERY:GUESS - Valid url found http://localhost:8080/bodgeit/basket.jsp
+URL-DISCOVERY:GUESS - Url not valid http://localhost:8080/bodgeit/badurl.jsp
+URL-DISCOVERY:GUESS - Url not valid http://localhost:8080/bodgeit/users.jsp
+URL-DISCOVERY:GUESS - Url not valid http://localhost:8080/bodgeit/profile.jsp
+URL-DISCOVERY:GUESS - Url not valid http://localhost:8080/bodgeit/config.jsp
+Full Input Test - Submitting form for /bodgeit/contact.jsp
+Full Input Test - Submitting form for /bodgeit/contact.jsp
+Full Input Test - Submitting form for /bodgeit/contact.jsp
+Full Input Test - Submitting form for /bodgeit/contact.jsp
+Full Input Test - Submitting form for /bodgeit/contact.jsp
+Full Input Test - Submitting form for /bodgeit/login.jsp
+Full Input Test - Submitting form for /bodgeit/login.jsp
+Full Input Test - Submitting form for /bodgeit/login.jsp
+Full Input Test - Submitting form for /bodgeit/login.jsp
+Full Input Test - Submitting form for /bodgeit/login.jsp
+Full Input Test - Submitting form for /bodgeit/basket.jsp
+Full Input Test - Submitting form for /bodgeit/basket.jsp
+Full Input Test - Submitting form for /bodgeit/basket.jsp
+Full Input Test - Submitting form for /bodgeit/basket.jsp
+Full Input Test - Submitting form for /bodgeit/basket.jsp
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?typeid=1
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?typeid=2
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?typeid=3
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?typeid=4
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?typeid=<script>alert("XSS")</script>
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?prodid=1
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?prodid=2
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?prodid=3
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?prodid=4
+Full Input Test - Accessing url: http://localhost:8080/bodgeit/bodgeit/product.jsp?prodid=<script>alert("XSS")</script>
+Full Input Test - Submitting form for /bodgeit/register.jsp
+Full Input Test - Submitting form for /bodgeit/register.jsp
+Full Input Test - Submitting form for /bodgeit/register.jsp
+Full Input Test - Submitting form for /bodgeit/register.jsp
+Full Input Test - Submitting form for /bodgeit/register.jsp
+Guess Passwords - Attempting username: user password: password
+Guess Passwords - Attempting username: user password: Chang3M3
+Guess Passwords - Attempting username: user password: P4ssw0rd
+
+Valid pages discovered:
+/bodgeit
+	URL INPUTS: 0
+	FORM INPUTS: 0
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 0
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/home.jsp
+	URL INPUTS: 0
+	FORM INPUTS: 0
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 0
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/about.jsp
+	URL INPUTS: 0
+	FORM INPUTS: 0
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 0
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/contact.jsp
+	URL INPUTS: 0
+	FORM INPUTS: 1
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 0
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/login.jsp
+	URL INPUTS: 0
+	FORM INPUTS: 1
+	PASSWORD FORM: true
+	SUCCESSFUL PASSWORDS: 0
+	SENSITIVE DATA LEAKED: 0
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/basket.jsp
+	URL INPUTS: 0
+	FORM INPUTS: 1
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 0
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/product.jsp
+	URL INPUTS: 2
+		typeid
+		prodid
+	FORM INPUTS: 0
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 0
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/register.jsp
+	URL INPUTS: 0
+	FORM INPUTS: 1
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 0
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/score.jsp
+	URL INPUTS: 0
+	FORM INPUTS: 0
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 3
+		admin@thebodgeitstore.com
+		user1@thebodgeitstore.com
+		test@thebodgeitstore.com
+	DATA IMPROPERLY SANITIZED: 0
+
+/bodgeit/admin.jsp
+	URL INPUTS: 0
+	FORM INPUTS: 0
+	PASSWORD FORM: false
+	SENSITIVE DATA LEAKED: 3
+		admin@thebodgeitstore.com
+		user1@thebodgeitstore.com
+		test@thebodgeitstore.com
+	DATA IMPROPERLY SANITIZED: 0
+
+LOGIN ATTEMPT: FAILURE
+	LOGIN URL: http://localhost:8080/bodgeit/login.jsp
+	USERNAME: user
+	PASSWORD: password
+
+Report Explination:
+	The beginning of the report is output from the different attempts at guessing valid URL's.  Next it outputs the different attempts at inputing all possible inputs into the forms of each page, as well as any url parameters.
+
+	The end of the report discusses the findings of the fuzz.  It lists each URL that was discovered, any possible URL parameters, the number of forms that appear on the page, if any of the forms are password forms, if any passwords worked in those password forms, followed by any sensitive data detected on the page, and finally and data that wasn't properly sanitized after being used for inputs.
+
+	The last bit of output from the report references the attempt to use the supplied credentials for a system log in.

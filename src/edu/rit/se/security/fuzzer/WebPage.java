@@ -19,6 +19,7 @@ public class WebPage {
 	private List<String> urlInputs;
 	private List<String> successfulPasswords;
 	private List<String> sensitiveDataFound;
+	private List<String> sanitizedDataFound;
 	
 	public WebPage() {
 		url = new String();
@@ -27,6 +28,7 @@ public class WebPage {
 		password = false;
 		successfulPasswords = new ArrayList<String>();
 		sensitiveDataFound = new ArrayList<String>();
+		sanitizedDataFound = new ArrayList<String>();
 	}
 	
 	public WebPage(String url) {
@@ -36,6 +38,7 @@ public class WebPage {
 		password = false;
 		successfulPasswords = new ArrayList<String>();
 		sensitiveDataFound = new ArrayList<String>();
+		sanitizedDataFound = new ArrayList<String>();
 	}
 	
 	public List<HtmlForm> getForms() {
@@ -73,6 +76,10 @@ public class WebPage {
 	
 	public List<String> getSensitiveDataFound() {
 		return sensitiveDataFound;
+	}
+	
+	public List<String> getSanitizedDataFound() {
+		return sanitizedDataFound;
 	}
 	
 	public boolean equals(Object o) {

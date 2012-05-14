@@ -29,7 +29,6 @@ public class FuzzerProperties extends Properties {
 	private static final String defaultPasswordsFile = "passwords.txt";
 	private static final String defaultUsernameId = "username";
 	private static final String defaultPasswordId = "password";
-	private static final String defaultSubmitId = "submit";
 	private static final String defaultGuessPasswords = "false";
 	private static final String defaultUsername = "username";
 	private static final String defaultPassword ="password";
@@ -37,6 +36,7 @@ public class FuzzerProperties extends Properties {
 	private static final String defaultLoginUrl = "http://localhost:8080/bodgeit/login.jsp";
 	private static final String defaultRandomInputNumber = "10";
 	private static final String defaultSensitiveDataFile = "sensitivedata.txt";
+	private static final String defaultSanitizedDataFile = "sanitizeddata.txt";
 
 	//Property keys
 	private static final String url = "url";
@@ -50,7 +50,6 @@ public class FuzzerProperties extends Properties {
 	private static final String passwordsFile = "passwordsfile";
 	private static final String usernameId = "usernameid";
 	private static final String passwordId = "passwordid";
-	private static final String submitId = "submitid";
 	private static final String guessPasswords = "passwordguessing";
 	private static final String username = "username";
 	private static final String password = "password";
@@ -58,9 +57,11 @@ public class FuzzerProperties extends Properties {
 	private static final String loginUrl = "loginurl";
 	private static final String randomInputNumber = "randominputnumber";
 	private static final String sensitiveDataFile = "sensitivedatafile";
+	private static final String sanitizedDataFile = "sanitizeddatafile";
 	
 	private static final long serialVersionUID = 5710264569101379889L;
 	private static FuzzerProperties properties = null;
+	private static List<String> inputs = null;
 	
 	private static FuzzerProperties getPropertyManager() {
 		if (properties == null) {
@@ -169,6 +170,20 @@ public class FuzzerProperties extends Properties {
 		return data;
 	}
 	
+	public static List<String> getSanitizedData() {
+		List<String> data = new ArrayList<String>();
+		
+		try {
+			Scanner input = new Scanner(new File(FuzzerProperties.getPropertyManager().getProperty(sanitizedDataFile, defaultSanitizedDataFile)));
+			while (input.hasNext()) {
+				data.add(input.nextLine());
+			}
+		} catch (FileNotFoundException e) {
+			System.err.println("FuzzerProperties: " + e.getMessage());
+		}
+		return data;
+	}
+	
 	public static String getURL() {
 		return FuzzerProperties.getPropertyManager().getProperty(url, defaultUrl);
 	}
@@ -187,10 +202,6 @@ public class FuzzerProperties extends Properties {
 	
 	public static String getUsernameId() {
 		return FuzzerProperties.getPropertyManager().getProperty(usernameId, defaultUsernameId);
-	}
-	
-	public static String getSubmitId() {
-		return FuzzerProperties.getPropertyManager().getProperty(submitId, defaultSubmitId);
 	}
 	
 	public static boolean guessPasswords() {
@@ -219,5 +230,23 @@ public class FuzzerProperties extends Properties {
 	
 	public static Long getRandomInputNumber() {
 		return Long.valueOf(FuzzerProperties.getPropertyManager().getProperty(randomInputNumber, defaultRandomInputNumber));
+	}
+	
+	public static List<String> getInputs() {
+		if (inputs == null) {
+			inputs = new ArrayList<String>();
+			for (String input : FuzzerProperties.getFuzzList()) {
+				if (!inputs.contains(input)) {
+					inputs.add(input);
+				}
+			}
+			for (String input : FuzzerProperties.getSanitizedData()) {
+				if (!inputs.contains(input)) {
+					inputs.add(input);
+				}
+			}
+		}
+		
+		return inputs;
 	}
 }

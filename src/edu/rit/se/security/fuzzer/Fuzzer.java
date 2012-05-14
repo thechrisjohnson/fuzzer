@@ -6,15 +6,22 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import com.gargoylesoftware.htmlunit.ElementNotFoundException;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.html.HtmlFileInput;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
+import com.gargoylesoftware.htmlunit.html.HtmlHiddenInput;
+import com.gargoylesoftware.htmlunit.html.HtmlImageInput;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlPasswordInput;
 import com.gargoylesoftware.htmlunit.html.HtmlSubmitInput;
+import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
 
 import edu.rit.se.security.fuzzer.properties.FuzzerProperties;
 
@@ -30,6 +37,8 @@ public class Fuzzer {
 	private String url;
 	private boolean loginSuccessful;
 	private List<String> sensitiveData;
+	private List<String> sanitizedData;
+	private Random random;
 	
 	public Fuzzer() {
 		//Make sure we can get the properties file first
@@ -41,6 +50,8 @@ public class Fuzzer {
 		url = FuzzerProperties.getURL();
 		loginSuccessful = false;
 		sensitiveData = FuzzerProperties.getSensitiveData();
+		sanitizedData = FuzzerProperties.getSanitizedData();
+		random = new Random();
 	}
 	
 	public static void main(String[] args) {
@@ -75,7 +86,6 @@ public class Fuzzer {
 	private void discoverPages(String base) {
 		if (FuzzerProperties.discoverPages()) {
 			// Discover pages recursively
-			List<WebPage> toAdd = new ArrayList<WebPage>();
 			discoverLinks(base, breakDownUrl(base));
 		}
 		
@@ -86,7 +96,7 @@ public class Fuzzer {
 					HtmlPage html = client.getPage(base + "/" + pageUrl);
 					System.out.println("URL-DISCOVERY:GUESS - Valid url found " + base + "/" + pageUrl);
 					WebPage page = breakDownUrl(base + "/" + pageUrl);
-					containsSensitiveData(page, html);
+					containsImproperData(page, html);
 				} catch (FailingHttpStatusCodeException e) {
 					//Url does not work
 					System.out.println("URL-DISCOVERY:GUESS - Url not valid " + base + "/" + pageUrl);
@@ -105,7 +115,7 @@ public class Fuzzer {
 		for (WebPage page : pages) {
 			try {
 				HtmlPage html = client.getPage(FuzzerProperties.getBaseURL() + page.getURL());
-				containsSensitiveData(page, html);
+				containsImproperData(page, html);
 				List<HtmlForm> forms = html.getForms();
 				for (HtmlForm form : forms) {
 					page.getForms().add(form);
@@ -133,7 +143,8 @@ public class Fuzzer {
 			}
 		} else {
 			for (int i = 0; i < FuzzerProperties.getRandomInputNumber(); i++) {
-				
+				int page = random.nextInt(pages.size());
+				testPageRandom(pages.get(page));
 			}
 		}
 	}
@@ -193,8 +204,13 @@ public class Fuzzer {
 			for (String data : page.getSensitiveDataFound()) {
 				System.out.println("\t\t" + data);
 			}
-			System.out.println();
 			
+			System.out.println("\tDATA IMPROPERLY SANITIZED: " + page.getSanitizedDataFound().size());
+			for (String data : page.getSanitizedDataFound()) {
+				System.out.println("\t\t" + data);
+			}
+			
+			System.out.println();
 		}
 			
 		System.out.print("LOGIN ATTEMPT: ");
@@ -211,7 +227,7 @@ public class Fuzzer {
 	private void discoverLinks(String base, WebPage page) {
 		try {
 			HtmlPage html = client.getPage(base);
-			containsSensitiveData(page, html);
+			containsImproperData(page, html);
 			List<HtmlAnchor> links = html.getAnchors();
 			for (HtmlAnchor link : links) {
 				URL tmp = new URL(url + "/" + link.getHrefAttribute());
@@ -219,7 +235,7 @@ public class Fuzzer {
 					WebPage temp = breakDownUrl(url + "/" + link.getHrefAttribute());
 					discoverLinks(url + "/" + link.getHrefAttribute(), temp);
 				} else {
-					WebPage temp = breakDownUrl(url + "/" + link.getHrefAttribute());
+					breakDownUrl(url + "/" + link.getHrefAttribute());
 				}
 			}
 		} catch (FailingHttpStatusCodeException e) {
@@ -244,9 +260,12 @@ public class Fuzzer {
 								HtmlInput passwordInput = form.getInputByName(FuzzerProperties.getPasswordId());
 								passwordInput.setValueAttribute(password);
 								
-								HtmlSubmitInput submit = form.getInputByName(FuzzerProperties.getSubmitId());
+								HtmlSubmitInput submit = getSubmitInput(form);
 								
-								String content = submit.<HtmlPage> click().getWebResponse().getContentAsString();
+								HtmlPage html = submit.<HtmlPage> click();
+								containsImproperData(page, html);
+								
+								String content = html.getWebResponse().getContentAsString();
 								
 								if (content.contains(FuzzerProperties.getLoginSuccessContent())) {
 									page.getSuccessfulPasswords().add(password);
@@ -268,7 +287,151 @@ public class Fuzzer {
 	}
 	
 	private void testPageFull(WebPage page) {
-		// TODO Test form with all input
+		for (String urlInput : page.getUrlInputs()) {
+			String base = url + page.getURL() + "?" + urlInput + "=";
+			for (String input : FuzzerProperties.getInputs()) {
+				try {
+					HtmlPage html = client.getPage(base + input);
+					containsImproperData(page, html);
+				} catch (FailingHttpStatusCodeException e) {
+				} catch (MalformedURLException e) {
+				} catch (IOException e) {
+				}
+			}
+		}
+		
+		for (HtmlForm form : page.getForms()) {
+			try {
+				List<HtmlInput> htmlInputs = getFormInputs(form);
+				HtmlSubmitInput submit = getSubmitInput(form);
+				for (String input : FuzzerProperties.getInputs()) {
+					for (HtmlInput htmlInput : htmlInputs) {
+						htmlInput.setValueAttribute(input);
+					}
+					
+					try {
+						HtmlPage html = submit.<HtmlPage> click();
+						containsImproperData(page, html);
+					} catch (IOException e) {
+						System.err.println("Full Input Test - Form Submission - " + e.getMessage());
+					}
+					
+				}
+			} catch(ElementNotFoundException e) {
+				System.err.println("Full Input Test - Unable to find submit button for form on " + page.getURL());
+			}
+		}
+	}
+	
+	private boolean testPageRandom(WebPage page) {
+		boolean selectForm = false;
+		if (page.getForms().size() > 0 && page.getUrlInputs().size() > 0) {
+			int rand = random.nextInt(2);
+			if (rand > 0) {
+				selectForm = true;
+			} 
+		} else if (page.getForms().size() > 0) {
+			selectForm = true;
+		} else if (page.getUrlInputs().size() > 0) {
+			// This statement unnecessary but else if required
+			selectForm = false;
+		} else {
+			return false;
+		}
+		
+		if (selectForm) {
+			try {
+				HtmlForm form = page.getForms().get(random.nextInt(page.getForms().size()));
+				List<HtmlInput> inputs = getFormInputs(form);
+				HtmlSubmitInput submit = getSubmitInput(form);
+				
+				
+				
+				for (HtmlInput input : inputs) {
+					input.setValueAttribute(FuzzerProperties.getInputs().get(random.nextInt(FuzzerProperties.getInputs().size())));
+				}
+				
+				HtmlPage html = submit.<HtmlPage> click();
+				containsImproperData(page, html);
+			} catch (ElementNotFoundException e) {
+				System.err.println("Random Input Form - " + page.getURL() + " - Submit button not found!");
+			} catch (IOException e) {
+				System.err.println("Random Input Form - " + page.getURL() + " - " + e.getMessage());
+			}
+			
+			
+		} else {
+			String base = url + page.getURL() + "?" + page.getUrlInputs().get(random.nextInt(page.getUrlInputs().size())) + "=";
+			String input = FuzzerProperties.getInputs().get(random.nextInt(FuzzerProperties.getInputs().size()));
+			base = base.concat(input);
+			
+			try {
+				HtmlPage html = client.getPage(base);
+				containsImproperData(page, html);
+			} catch (FailingHttpStatusCodeException e) {
+			} catch (MalformedURLException e) {
+			} catch (IOException e) {
+			}
+		}
+		
+		return true;
+	}
+	
+	private List<HtmlInput> getFormInputs(HtmlForm form) {
+		List<HtmlInput> inputs = new ArrayList<HtmlInput>();
+		
+		for (DomNode n : form.getChildren()) {
+			inputs.addAll(parseDom(n));
+		}
+		
+		return inputs;
+	}
+	
+	private List<HtmlInput> parseDom(DomNode node) {
+		List<HtmlInput> inputs = new ArrayList<HtmlInput>();
+		
+		for (DomNode n : node.getChildren()) {
+			if( n instanceof HtmlTextInput){
+				inputs.add((HtmlInput) n);
+			}else if(n instanceof HtmlHiddenInput){
+				inputs.add((HtmlInput) n);
+			}else if(n instanceof HtmlFileInput){
+				inputs.add((HtmlInput) n);
+			}else if(n instanceof HtmlPasswordInput){
+				inputs.add((HtmlInput) n);
+			}else if(n instanceof HtmlImageInput){
+				inputs.add((HtmlInput) n);
+			}
+			
+			if (n.hasChildNodes()){
+				inputs.addAll(parseDom(n));
+			}
+		}
+		
+		return inputs;
+	}
+	
+	private HtmlSubmitInput getSubmitInput(HtmlForm form) throws ElementNotFoundException{
+		for (DomNode n : form.getChildren()) {
+			try {
+				return getSubmitInput(n);
+			} catch(ElementNotFoundException e) {}
+		}
+		throw new ElementNotFoundException("", "", "");
+	}
+	
+	private HtmlSubmitInput getSubmitInput(DomNode node) throws ElementNotFoundException {
+		if (node instanceof HtmlSubmitInput) {
+			return (HtmlSubmitInput) node;
+		} else if (node.hasChildNodes()) {
+			for (DomNode n : node.getChildren()) {
+				try {
+					return getSubmitInput(n);
+				} catch(ElementNotFoundException e) {}
+			}
+		}
+		
+		throw new ElementNotFoundException("", "", "");
 	}
 	
 	private void login() {
@@ -281,7 +444,7 @@ public class Fuzzer {
 					HtmlInput password = form.getInputByName(FuzzerProperties.getPasswordId());
 					password.setValueAttribute(FuzzerProperties.getPassword());
 					
-					HtmlSubmitInput submit = form.getInputByName(FuzzerProperties.getSubmitId());
+					HtmlSubmitInput submit = getSubmitInput(form);
 					
 					String content = submit.<HtmlPage> click().getWebResponse().getContentAsString();
 					
@@ -301,10 +464,15 @@ public class Fuzzer {
 		}
 	}
 	
-	private void containsSensitiveData(WebPage page, HtmlPage content) {
+	private void containsImproperData(WebPage page, HtmlPage content) {
 		for (String data : sensitiveData) {
 			if (content.asXml().contains(data) && !page.getSensitiveDataFound().contains(data)) {
 				page.getSensitiveDataFound().add(data);
+			}
+		}
+		for (String data : sanitizedData) {
+			if (content.asXml().contains(data) && !page.getSanitizedDataFound().contains(data)) {
+				page.getSanitizedDataFound().add(data);
 			}
 		}
 	}
